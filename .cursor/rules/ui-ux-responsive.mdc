@@ -1,0 +1,98 @@
+---
+alwaysApply: true
+description: UI/UX, responsive design, accessibility, performance, and interaction principles for this project
+---
+
+# UI/UX and Responsive Design Principles
+
+Use these principles across all UI work (components, pages, styles). Favor clarity, performance, and accessibility. Defaults should avoid blank/error states and degrade gracefully.
+
+## Visual Design
+- Establish clear visual hierarchy using size, weight, contrast, and spacing.
+- Use a cohesive color palette aligned with brand; expose tokens as CSS variables.
+- Optimize typography for readability and emphasis; prefer system fonts or well‑hinted web fonts.
+- Maintain WCAG 2.1 AA contrast for text and essential UI.
+- Keep a consistent style for cards, shadows, radii, and iconography.
+
+## Interaction Design
+- Build intuitive navigation patterns; keep primary actions prominent and predictable.
+- Use familiar UI components to reduce cognitive load; avoid novel patterns unless justified.
+- Provide clear CTAs; one primary action per surface where possible.
+- Implement responsive layouts for mobile/tablet/desktop.
+- Use subtle animations (150–250ms) to reinforce state changes; never block input.
+
+## Accessibility
+- Follow WCAG 2.1 AA guidelines.
+- Use semantic HTML and ARIA only when semantics are insufficient.
+- Provide alt text for images and non‑text content.
+- Ensure keyboard navigability and visible focus states for all controls.
+- Test critical flows with screen readers and keyboard only.
+
+## Performance Optimization
+- Optimize and compress images/assets; prefer modern formats (AVIF/WebP/SVG).
+- Lazy‑load non‑critical resources and below‑the‑fold content.
+- Use route/code splitting for large views and heavy libraries.
+- Monitor and improve Core Web Vitals (LCP, INP/FID, CLS).
+
+## User Feedback
+- Show instant feedback for actions (pressed/disabled/success/error states).
+- Use loading indicators/skeletons for async operations; never show blank screens.
+- Provide actionable error messages and recovery options (retry, contact, docs).
+- Capture analytics/telemetry to learn from real usage (privacy‑respecting).
+
+## Information Architecture
+- Organize content logically with clear labels and categories.
+- Provide effective search; support filtering/sorting where helpful.
+- Keep navigation shallow when possible; avoid deep nesting.
+
+## Mobile‑First & Fluid Layouts
+- Design mobile‑first, then scale up with media queries.
+- Use relative units (%, rem, em) for type and spacing.
+- Use CSS Grid/Flexbox; avoid fixed widths; support content reflow.
+
+## Media Queries
+- Choose breakpoints based on content needs, not devices.
+- Test in common widths and orientations; verify touch and hover behaviors.
+
+## Images & Media
+- Use responsive images with srcset/sizes; lazy‑load images and videos.
+- Make embeds responsive with intrinsic ratios.
+
+## Typography
+- Use rem for font sizes; adjust line‑height/letter‑spacing by breakpoint.
+- Use a modular scale for consistent hierarchy.
+
+## Touch Targets
+- Minimum interactive size: 44×44px; provide adequate spacing.
+- Include hover (desktop) and focus (keyboard) states.
+
+## Content Prioritization
+- Prioritize essential content on small screens; defer secondary content.
+- Use progressive disclosure (accordions/drawers) for details.
+- Consider off‑canvas patterns for secondary navigation on mobile.
+
+## Navigation
+- Ensure keyboard/screen‑reader accessible navigation.
+- Consider sticky headers for wayfinding; avoid obscuring content.
+
+## Forms
+- Use appropriate input types; support autofill and validation hints.
+- Provide inline validation and clear, specific error messages.
+- Layouts adapt across breakpoints; preserve context on error.
+
+## Testing & Iteration
+- Test responsiveness in real devices and emulators.
+- Run usability checks on key flows; iterate based on data.
+- Use A/B tests when making significant UX tradeoffs.
+
+## Documentation & Design System
+- Maintain a style guide with tokens, components, and patterns.
+- Document component usage, states, and accessibility notes.
+- Keep user flow diagrams for complex interactions.
+
+## Implementation Notes (Project‑specific)
+- Prefer Tailwind utility classes backed by CSS variables for theme tokens.
+- Provide skeletons and sensible fallbacks to avoid blank screens.
+- Keep animations CSS‑based when possible; respect prefers‑reduced‑motion.
+- Structure components to be role‑aware and responsive by default.
+
