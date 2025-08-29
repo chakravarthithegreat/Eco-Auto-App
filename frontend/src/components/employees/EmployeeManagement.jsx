@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePayrollStore } from '../../state/payrollStore';
+import { useAuthStore } from '../../state/authStore';
+import { useNavigationStore } from '../../state/navigationStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -23,30 +25,135 @@ import {
   Edit,
   Trash2,
   Download,
-  Printer
+  Printer,
+  X,
+  UserPlus
 } from 'lucide-react';
 
 const EmployeeManagement = () => {
-  const { employees } = usePayrollStore();
+  const { employees, fetchEmployees, isLoading, addEmployee } = usePayrollStore();
+  const { canManageUsers } = useAuthStore();
+  const { setCurrentPage } = useNavigationStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Fetch employees when component mounts
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
   
-  const filteredEmployees = employees?.filter(employee => 
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.subRole.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Filter employees based on search term and active tab
+  const filteredEmployees = employees?.filter(employee => {
+    // First filter by search term
+    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.subRole.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    // Then filter by active tab
+    switch (activeTab) {
+      case 'active':
+        return employee.isActive;
+      case 'managers':
+        return employee.role === 'Manager';
+      case 'team':
+        return employee.role === 'Team Member';
+      case 'all':
+      default:
+        return true;
+    }
+  }) || [];
   
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleAddEmployee = () => {
+    setShowAddEmployeeModal(true);
+  };
+
+  const handleFilter = () => {
+    setShowFilterModal(true);
+  };
+
+  const handleAddNewEmployee = (employeeData) => {
+    const newEmployee = {
+      ...employeeData,
+      id: Date.now(),
+      isActive: true,
+      joinDate: new Date().toISOString().split('T')[0]
+    };
+    addEmployee(newEmployee);
+    setShowAddEmployeeModal(false);
   };
   
   const getExperienceInYears = (employee) => {
     // This would normally calculate from joinDate, but for demo we'll return random values
     return Math.floor(Math.random() * 5) + 1;
+  };
+  
+  const getEmployeeStatus = (employee) => {
+    // Check if employee is newly created (from localStorage)
+    const localStorageEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
+    const isNewEmployee = localStorageEmployees.some(emp => emp._id === employee.id);
+    
+    if (isNewEmployee) {
+      return {
+        status: 'new',
+        label: 'New Employee',
+        color: 'bg-blue-500',
+        textColor: 'text-blue-600',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200'
+      };
+    }
+    
+    if (employee.isActive) {
+      return {
+        status: 'active',
+        label: 'Active',
+        color: 'bg-green-500',
+        textColor: 'text-green-600',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200'
+      };
+    } else {
+      return {
+        status: 'inactive',
+        label: 'Inactive',
+        color: 'bg-gray-500',
+        textColor: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        borderColor: 'border-gray-200'
+      };
+    }
+  };
+  
+  const getEmployeeRoleBadge = (employee) => {
+    switch (employee.role) {
+      case 'Manager':
+        return {
+          label: 'Manager',
+          color: 'bg-purple-100 text-purple-800 border-purple-200'
+        };
+      case 'Admin':
+        return {
+          label: 'Admin',
+          color: 'bg-red-100 text-red-800 border-red-200'
+        };
+      case 'Team Member':
+      default:
+        return {
+          label: 'Team Member',
+          color: 'bg-blue-100 text-blue-800 border-blue-200'
+        };
+    }
   };
   
   const getWorkHoursData = (employee) => {
@@ -71,6 +178,30 @@ const EmployeeManagement = () => {
   
   const employeeStats = getEmployeeStats();
   
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -94,15 +225,34 @@ const EmployeeManagement = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+                onClick={handleFilter}
+              >
                 <Filter className="w-4 h-4" />
                 Filter
               </Button>
               
-              <Button className="flex items-center gap-2 bg-gradient-to-r from-primary-green to-primary-green-light text-surface-900">
-                <Plus className="w-4 h-4" />
-                Add Employee
-              </Button>
+              {/* Show both Add Employee and Add Detailed Profile buttons for admins/managers */}
+              {canManageUsers() && (
+                <>
+                  <Button 
+                    className="flex items-center gap-2 bg-gradient-to-r from-primary-green to-primary-green-light text-surface-900"
+                    onClick={handleAddEmployee}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Employee
+                  </Button>
+                  <Button 
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                    onClick={() => setCurrentPage('profile-creation')}
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Add Detailed Profile
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -244,20 +394,29 @@ const EmployeeManagement = () => {
                         }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 rounded-full overflow-hidden">
-                            <img 
-                              src={employee.image || `https://randomuser.me/api/portraits/${employee.id % 2 === 0 ? 'women' : 'men'}/${employee.id}.jpg`}
-                              alt={employee.name}
-                              className="w-full h-full object-cover"
-                            />
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-full overflow-hidden">
+                              <img 
+                                src={employee.image || `https://randomuser.me/api/portraits/${employee.id % 2 === 0 ? 'women' : 'men'}/${employee.id}.jpg`}
+                                alt={employee.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            {/* Status indicator dot */}
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getEmployeeStatus(employee).color}`}></div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900 truncate">{employee.name}</h3>
                             <p className="text-sm text-gray-500 truncate">{employee.subRole}</p>
                           </div>
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">
-                            {employee.role}
-                          </Badge>
+                          <div className="flex flex-col items-end gap-1">
+                            <Badge className={`text-xs border ${getEmployeeRoleBadge(employee).color}`}>
+                              {getEmployeeRoleBadge(employee).label}
+                            </Badge>
+                            <Badge className={`text-xs ${getEmployeeStatus(employee).bgColor} ${getEmployeeStatus(employee).textColor} ${getEmployeeStatus(employee).borderColor} border`}>
+                              {getEmployeeStatus(employee).label}
+                            </Badge>
+                          </div>
                         </div>
                         
                         <div className="mt-4 flex items-center justify-between text-sm">
@@ -265,9 +424,9 @@ const EmployeeManagement = () => {
                             <Clock className="w-4 h-4 mr-1" />
                             <span>46h/week</span>
                           </div>
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
-                            <span className="text-green-600 text-xs">Active</span>
+                          <div className="flex items-center text-gray-500">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            <span>{getExperienceInYears(employee)}+ years</span>
                           </div>
                         </div>
                       </div>
@@ -285,12 +444,16 @@ const EmployeeManagement = () => {
                         }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <img 
-                              src={employee.image || `https://randomuser.me/api/portraits/${employee.id % 2 === 0 ? 'women' : 'men'}/${employee.id}.jpg`}
-                              alt={employee.name}
-                              className="w-full h-full object-cover"
-                            />
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full overflow-hidden">
+                              <img 
+                                src={employee.image || `https://randomuser.me/api/portraits/${employee.id % 2 === 0 ? 'women' : 'men'}/${employee.id}.jpg`}
+                                alt={employee.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            {/* Status indicator dot */}
+                            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getEmployeeStatus(employee).color}`}></div>
                           </div>
                           <div>
                             <h3 className="font-medium text-gray-900">{employee.name}</h3>
@@ -521,6 +684,313 @@ const EmployeeManagement = () => {
             <p className="text-gray-500">Try adjusting your search criteria</p>
           </Card>
         )}
+
+        {/* Add Employee Modal */}
+        {showAddEmployeeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">Add New Employee</h3>
+                <button 
+                  onClick={() => setShowAddEmployeeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <AddEmployeeForm 
+                onSubmit={handleAddNewEmployee}
+                onCancel={() => setShowAddEmployeeModal(false)}
+                onProfileCreation={() => window.location.hash = '/profile-creation'}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Filter Modal */}
+        {showFilterModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">Filter Employees</h3>
+                <button 
+                  onClick={() => setShowFilterModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <FilterForm 
+                onApply={(filters) => {
+                  console.log('Applied filters:', filters);
+                  setShowFilterModal(false);
+                }}
+                onCancel={() => setShowFilterModal(false)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Add Employee Form Component
+const AddEmployeeForm = ({ onSubmit, onCancel, onProfileCreation }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'Team Member',
+    subRole: '',
+    department: 'Production',
+    baseSalary: '',
+    skills: []
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter full name"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter email address"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+        <input
+          type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter phone number"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="Team Member">Team Member</option>
+            <option value="Manager">Manager</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+          <select
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="Production">Production</option>
+            <option value="Quality Control">Quality Control</option>
+            <option value="Assembly">Assembly</option>
+            <option value="Packaging">Packaging</option>
+            <option value="Warehouse">Warehouse</option>
+            <option value="Management">Management</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+        <input
+          type="text"
+          name="subRole"
+          value={formData.subRole}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter position/title"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Base Salary (₹)</label>
+        <input
+          type="number"
+          name="baseSalary"
+          value={formData.baseSalary}
+          onChange={handleChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter base salary"
+        />
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <Button type="submit" className="flex-1">
+          Add Employee
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+      </div>
+      
+      <div className="pt-4 text-center">
+        <p className="text-sm text-gray-500 mb-2">Or</p>
+        <Button 
+          type="button" 
+          variant="link" 
+          onClick={onProfileCreation}
+          className="text-primary-green hover:text-primary-green-dark"
+        >
+          Create detailed employee profile
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+// Filter Form Component
+const FilterForm = ({ onApply, onCancel }) => {
+  const [filters, setFilters] = useState({
+    role: '',
+    department: '',
+    status: '',
+    minSalary: '',
+    maxSalary: ''
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleApply = () => {
+    onApply(filters);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+        <select
+          name="role"
+          value={filters.role}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Roles</option>
+          <option value="Team Member">Team Member</option>
+          <option value="Manager">Manager</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+        <select
+          name="department"
+          value={filters.department}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Departments</option>
+          <option value="Production">Production</option>
+          <option value="Quality Control">Quality Control</option>
+          <option value="Assembly">Assembly</option>
+          <option value="Packaging">Packaging</option>
+          <option value="Warehouse">Warehouse</option>
+          <option value="Management">Management</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select
+          name="status"
+          value={filters.status}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Min Salary</label>
+          <input
+            type="number"
+            name="minSalary"
+            value={filters.minSalary}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Min salary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Max Salary</label>
+          <input
+            type="number"
+            name="maxSalary"
+            value={filters.maxSalary}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Max salary"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <Button onClick={handleApply} className="flex-1">
+          Apply Filters
+        </Button>
+        <Button variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
       </div>
     </div>
   );

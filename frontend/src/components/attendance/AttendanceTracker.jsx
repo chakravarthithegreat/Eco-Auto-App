@@ -80,6 +80,17 @@ const AttendanceTracker = () => {
     }
   };
 
+  const formatStatus = (status) => {
+    switch (status) {
+      case ATTENDANCE_STATUS.present: return 'Present';
+      case ATTENDANCE_STATUS.late: return 'Late';
+      case ATTENDANCE_STATUS.absent: return 'Absent';
+      case ATTENDANCE_STATUS.halfDay: return 'Half Day';
+      case ATTENDANCE_STATUS.leave: return 'On Leave';
+      default: return status;
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case ATTENDANCE_STATUS.present:
@@ -156,7 +167,7 @@ const AttendanceTracker = () => {
                 </div>
                 <div>
                   <div className="font-semibold text-gray-900">
-                    {todayAttendance.status}
+                    {formatStatus(todayAttendance.status)}
                   </div>
                   <div className="text-sm text-gray-500">
                     {todayAttendance.notes}

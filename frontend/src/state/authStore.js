@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
 // Define responsibilities and sub-responsibilities according to specification
 const RESPONSIBILITIES = [
@@ -200,9 +200,9 @@ const useAuthStore = create(
       subResponsibilities: SUB_RESPONSIBILITIES,
 
       // Actions
-      login: async (credentials) => {
+      login: async (username, password) => {
         // Validate input
-        if (!credentials.username || !credentials.password) {
+        if (!username || !password) {
           const errorMessage = 'Username and password are required';
           set({ error: errorMessage });
           return { success: false, error: errorMessage };
@@ -218,8 +218,8 @@ const useAuthStore = create(
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              email: credentials.username, // Using email for login
-              password: credentials.password
+              username: username,
+              password: password
             }),
           });
 
@@ -265,20 +265,23 @@ const useAuthStore = create(
           
           // Fallback to demo login if backend is not available
           const demoUsers = {
-            'meera.iyer@artgifts.com': { role: 'ADMIN', name: 'Meera Iyer' },
-            'rajesh.kumar@artgifts.com': { role: 'MANAGER', name: 'Rajesh Kumar' },
-            'amit.patel@artgifts.com': { role: 'TEAM_MEMBER', name: 'Amit Patel' }
+            'meera.iyer': { role: 'ADMIN', name: 'Meera Iyer' },
+            'rajesh.kumar': { role: 'MANAGER', name: 'Rajesh Kumar' },
+            'amit.patel': { role: 'TEAM_MEMBER', name: 'Amit Patel' },
+            'priya.sharma': { role: 'MANAGER', name: 'Priya Sharma' },
+            'sneha.reddy': { role: 'TEAM_MEMBER', name: 'Sneha Reddy' },
+            'vikram.singh': { role: 'TEAM_MEMBER', name: 'Vikram Singh' }
           };
           
-          const demoUser = demoUsers[credentials.username];
+          const demoUser = demoUsers[username];
           
-          if (demoUser && credentials.password === 'password123') {
+          if (demoUser && password === 'password123') {
             const user = {
               id: `demo-${Date.now()}`,
-              username: credentials.username,
+              username: username,
               role: demoUser.role,
               name: demoUser.name,
-              email: credentials.username,
+              email: `${username}@artgifts.com`,
               status: 'ACTIVE',
               department: 'Demo Department',
               position: demoUser.role === 'ADMIN' ? 'CEO' : demoUser.role === 'MANAGER' ? 'Manager' : 'Team Member',

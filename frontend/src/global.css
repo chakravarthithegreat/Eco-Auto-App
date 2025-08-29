@@ -323,10 +323,41 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile dock utility classes */
-.mobile-dock { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(92%, 680px); background: var(--dock-bg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--dock-border); border-radius: 9999px; padding: 10px 14px; box-shadow: 0 10px 40px rgba(15,23,42,0.12); z-index: 40; }
-.mobile-dock-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 9999px; transition: all .2s ease; color: #0f172a99; }
-.mobile-dock-btn.active { background: linear-gradient(135deg, var(--brand-grad-start), var(--brand-grad-end)); color: white; box-shadow: 0 6px 20px rgba(0,0,0,.15); }
+/* Mobile dock utility classes - Enhanced for better mobile compatibility */
+.mobile-dock { 
+  position: fixed; 
+  left: 50%; 
+  bottom: 16px; 
+  transform: translateX(-50%); 
+  width: min(92%, 680px); 
+  max-width: calc(100vw - 32px); /* Ensure it doesn't exceed viewport */
+  background: var(--dock-bg); 
+  -webkit-backdrop-filter: blur(16px); 
+  backdrop-filter: blur(16px); 
+  border: 1px solid var(--dock-border); 
+  border-radius: 9999px; 
+  padding: 10px 14px; 
+  box-shadow: 0 10px 40px rgba(15,23,42,0.12); 
+  z-index: 40; 
+}
+
+.mobile-dock-btn { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 44px; 
+  height: 44px; 
+  border-radius: 9999px; 
+  transition: all .2s ease; 
+  color: #0f172a99; 
+  flex-shrink: 0; /* Prevent button shrinking */
+}
+
+.mobile-dock-btn.active { 
+  background: linear-gradient(135deg, var(--brand-grad-start), var(--brand-grad-end)); 
+  color: white; 
+  box-shadow: 0 6px 20px rgba(0,0,0,.15); 
+}
 
 /* Animation Keyframes */
 @keyframes fadeIn {
@@ -616,6 +647,10 @@ body {
   flex: 1;
   padding: var(--space-md);
   padding-bottom: 6rem; /* Space for bottom nav on mobile */
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
@@ -1208,6 +1243,15 @@ body {
   
   .card {
     margin-bottom: var(--space-md);
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Mobile card grid - 2 cards in a row */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
   }
   
   .stat-large {
@@ -1216,6 +1260,44 @@ body {
   
   .stat-percentage {
     font-size: 1.5rem;
+  }
+  
+  /* Prevent horizontal overflow on mobile */
+  .app-container {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Ensure all containers respect viewport width */
+  .container, .container-fluid {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Fix table overflow on mobile */
+  table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Fix flex containers that might overflow */
+  .flex {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  
+  /* Ensure text doesn't overflow */
+  .text-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -1289,6 +1371,59 @@ body {
 
 .justify-center {
   justify-content: center;
+}
+
+/* Mobile overflow prevention utilities */
+.overflow-hidden-mobile {
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .overflow-hidden-mobile {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+}
+
+/* Prevent text overflow */
+.text-overflow-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive container */
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+  }
 }
 
 .gap-1 {
@@ -1437,4 +1572,54 @@ body {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Global mobile overflow prevention */
+@media (max-width: 767px) {
+  * {
+    max-width: 100vw;
+  }
+  
+  /* Prevent any element from causing horizontal scroll */
+  body, html, #root, .app-container {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Ensure all direct children respect container width */
+  .app-container > * {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Prevent tables from overflowing */
+  table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+  
+  /* Prevent images from overflowing */
+  img, svg {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Prevent flex containers from overflowing */
+  .flex, .flex-row, .flex-col {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  /* Prevent grid containers from overflowing */
+  .grid {
+    max-width: 100%;
+  }
+  
+  /* Prevent text from overflowing */
+  p, h1, h2, h3, h4, h5, h6, span, div {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
 }

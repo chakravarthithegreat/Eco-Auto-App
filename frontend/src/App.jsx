@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from './state/authStore';
+import { useNavigationStore } from './state/navigationStore';
 import Login from './components/auth/Login';
 import MainLayout from './layouts/MainLayout';
 import { DarkModeProvider } from './contexts/DarkModeContext';
 import DashboardSkeleton from './components/ui/DashboardSkeleton';
+import EmployeeSignUp from './components/employees/EmployeeSignUp';
 
 function App() {
   console.log('App component rendering...');
@@ -12,14 +14,15 @@ function App() {
     // Use a more reliable way to access the auth store
     const authStore = useAuthStore();
     const { isAuthenticated, hasHydrated, user } = authStore;
+    const { currentPage } = useNavigationStore();
     
     const [isStoreReady, setIsStoreReady] = useState(false);
     
-    console.log('App state:', { isAuthenticated, hasHydrated, user, isStoreReady });
+    console.log('App state:', { isAuthenticated, hasHydrated, user, isStoreReady, currentPage });
 
     useEffect(() => {
-      // Wait for auth store to hydrate
-      if (hasHydrated !== undefined) {
+      // Wait for auth store to hydrate - FIXED: Changed condition to check for true
+      if (hasHydrated === true) {
         setIsStoreReady(true);
       }
       
@@ -45,6 +48,16 @@ function App() {
             <p className="text-gray-600">Loading application...</p>
           </div>
         </div>
+      );
+    }
+
+    // Show employee sign-up page even if not authenticated
+    if (currentPage === 'employee-signup') {
+      console.log('App: Showing employee sign-up page');
+      return (
+        <DarkModeProvider>
+          <EmployeeSignUp />
+        </DarkModeProvider>
       );
     }
 

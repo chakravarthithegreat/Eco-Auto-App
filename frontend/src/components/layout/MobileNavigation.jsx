@@ -33,23 +33,25 @@ const MobileNavigation = () => {
   // Define navigation items based on user role
   const getNavigationItems = () => {
     const baseItems = [
-      { id: 'dashboard', label: 'Home', icon: Home, color: 'var(--game-primary)' },
-      { id: 'tasks', label: 'Tasks', icon: CheckSquare, color: 'var(--game-success)' },
-      { id: 'attendance', label: 'Time', icon: Clock, color: 'var(--game-accent)' },
-      { id: 'rewards', label: 'Rewards', icon: Gift, color: 'var(--game-warning)' },
+      { id: 'dashboard', label: 'Home', icon: Home },
+      { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+      { id: 'attendance', label: 'Time', icon: Clock },
+      { id: 'rewards', label: 'Rewards', icon: Gift },
     ];
 
     // Add role-specific items
     if (user?.role === 'ADMIN' || user?.role === 'MANAGER') {
       baseItems.push(
-        { id: 'analytics', label: 'Analytics', icon: BarChart3, color: 'var(--game-purple)' },
-        { id: 'employees', label: 'Team', icon: Users, color: 'var(--game-info)' },
-        { id: 'settings', label: 'Settings', icon: Settings, color: 'var(--game-orange)' }
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'employees', label: 'Team', icon: Users },
+        { id: 'employee-notifications', label: 'Alerts', icon: Bell },
+        { id: 'employee-approvals', label: 'Approvals', icon: CheckSquare },
+        { id: 'settings', label: 'Settings', icon: Settings }
       );
     } else {
       baseItems.push(
-        { id: 'notifications', label: 'Alerts', icon: Bell, color: 'var(--game-danger)' },
-        { id: 'profile', label: 'Profile', icon: User, color: 'var(--game-pink)' }
+        { id: 'notifications', label: 'Alerts', icon: Bell },
+        { id: 'profile', label: 'Profile', icon: User }
       );
     }
 
@@ -59,16 +61,21 @@ const MobileNavigation = () => {
   const navigationItems = getNavigationItems();
 
   return (
-    <div className="md:hidden mobile-dock">
-      <div className="flex items-center justify-between">
+    <div className="md:hidden mobile-dock bg-light-surface border-t border-light-bg-secondary dark:bg-dark-surface dark:border-dark-bg-secondary">
+      <div className="flex items-center justify-between px-2 py-2">
         {navigationItems.slice(0,5).map((item) => (
           <button
             key={item.id}
             onClick={() => handleNavigation(item.id)}
-            className={`mobile-dock-btn ${currentPage === item.id ? 'active' : ''}`}
+            className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors flex-1 ${
+              currentPage === item.id 
+                ? 'text-light-primary bg-light-bg-secondary dark:text-dark-primary dark:bg-dark-bg-secondary' 
+                : 'text-light-text-secondary hover:text-light-text dark:text-dark-text-secondary dark:hover:text-dark-text'
+            }`}
             title={item.label}
           >
-            <item.icon className="w-5 h-5" />
+            <item.icon className="w-5 h-5 mb-1" />
+            <span className="text-xs">{item.label}</span>
           </button>
         ))}
       </div>

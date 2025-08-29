@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Button = React.forwardRef(({ className, variant, size, ...props }, ref) => {
+const Button = React.forwardRef(({ className, variant, size, onClick, disabled, 'aria-label': ariaLabel, ...props }, ref) => {
   const baseClasses = "inline-flex items-center justify-center font-medium transition-all focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none rounded-lg";
   
   const variantClasses = {
@@ -22,13 +22,35 @@ const Button = React.forwardRef(({ className, variant, size, ...props }, ref) =>
     icon: "h-9 w-9"
   };
   
+  // FIXED: Add proper click handler with error handling
+  const handleClick = (event) => {
+    try {
+      if (onClick && !disabled) {
+        onClick(event);
+      }
+    } catch (error) {
+      console.error('Button click error:', error);
+      // Prevent error from bubbling up
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+  
   return (
     <button
       ref={ref}
       className={`${baseClasses} ${variantClasses[variant || 'default']} ${sizeClasses[size || 'default']} ${className || ''}`}
+      onClick={handleClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      // FIXED: Add proper accessibility attributes
+      role={props.role || 'button'}
+      tabIndex={disabled ? -1 : 0}
       {...props}
     />
   );
 });
+
+Button.displayName = 'Button';
 
 export { Button };

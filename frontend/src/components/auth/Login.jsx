@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../state/authStore';
-import { Eye, EyeOff, User, Lock, LogIn, ArrowRight, Shield } from 'lucide-react';
+import { useNavigationStore } from '../../state/navigationStore';
+import { Eye, EyeOff, User, Lock, LogIn, ArrowRight, Shield, UserPlus } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, isLoading, error, clearError } = useAuthStore();
+  const { setCurrentPage } = useNavigationStore();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,12 +30,22 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.username.trim() || !formData.password.trim()) {
+    // FIXED: Add proper validation with user feedback
+    if (!formData.username.trim()) {
+      setFormData(prev => ({ ...prev, username: '' }));
+      // Show error message
+      if (clearError) clearError();
+      return;
+    }
+    
+    if (!formData.password.trim()) {
+      setFormData(prev => ({ ...prev, password: '' }));
+      // Show error message
+      if (clearError) clearError();
       return;
     }
 
-    const result = await login(formData);
+    const result = await login(formData.username, formData.password);
     
     if (result.success) {
       console.log('Login successful:', result.user);
@@ -45,16 +56,21 @@ const Login = () => {
 
   const handleQuickLogin = async (role) => {
     const credentials = {
-      admin: { username: 'meera.iyer@artgifts.com', password: 'password123' },
-      manager: { username: 'rajesh.kumar@artgifts.com', password: 'password123' },
+      admin: { username: 'admin', password: 'admin123' },
+      manager: { username: 'manager', password: 'manager123' },
       team_member: { username: 'amit.patel@artgifts.com', password: 'password123' }
     };
 
     const creds = credentials[role];
     if (creds) {
       setFormData(creds);
-      await login(creds);
+      await login(creds.username, creds.password);
     }
+  };
+
+  const handleSignUpClick = () => {
+    console.log('Login: Create Employee Account button clicked');
+    setCurrentPage('employee-signup');
   };
 
   return (
@@ -230,10 +246,24 @@ const Login = () => {
               Demo Credentials
             </p>
             <div className="text-xs text-primary-600 space-y-1">
-              <div><span className="inline-block px-2 py-0.5 rounded bg-white text-primary-700 mr-1 font-medium shadow-sm">Admin</span> meera.iyer@artgifts.com / password123</div>
-              <div><span className="inline-block px-2 py-0.5 rounded bg-white text-primary-700 mr-1 font-medium shadow-sm">Manager</span> rajesh.kumar@artgifts.com / password123</div>
+              <div><span className="inline-block px-2 py-0.5 rounded bg-white text-primary-700 mr-1 font-medium shadow-sm">Admin</span> admin / admin123</div>
+              <div><span className="inline-block px-2 py-0.5 rounded bg-white text-primary-700 mr-1 font-medium shadow-sm">Manager</span> manager / manager123</div>
               <div><span className="inline-block px-2 py-0.5 rounded bg-white text-primary-700 mr-1 font-medium shadow-sm">Member</span> amit.patel@artgifts.com / password123</div>
             </div>
+          </div>
+
+          {/* Sign Up Option */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-surface-600 mb-4">New to Eco-Auto?</p>
+            <Button
+              type="button"
+              onClick={handleSignUpClick}
+              variant="outline"
+              className="w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 border-2 border-primary-200 text-primary-700 hover:bg-primary-50 transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <UserPlus className="w-5 h-5" />
+              <span>Create Employee Account</span>
+            </Button>
           </div>
         </div>
         

@@ -1,6 +1,7 @@
-const API_BASE = import.meta.env.VITE_API_URL || '';
+// API base URL for Netlify Functions
+const API_BASE = '/.netlify/functions/api';
 
-// Mock data for when backend is not available
+// Mock data for when backend is not available (fallback only)
 const mockData = {
   hours: {
     average: 8.5,
@@ -41,11 +42,27 @@ export async function fetchJSON(url, opts = {}) {
   const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
   
   try {
-    const res = await fetch(fullUrl, { credentials: 'include', ...opts });
-    if (!res.ok) throw new Error(`Request failed ${res.status}`);
-    return res.json();
+    console.log(`🔄 Fetching data from: ${fullUrl}`);
+    const res = await fetch(fullUrl, { 
+      credentials: 'include', 
+      headers: {
+        'Content-Type': 'application/json',
+        ...opts.headers
+      },
+      ...opts 
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Request failed ${res.status}: ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    console.log(`✅ Data received from: ${fullUrl}`, data);
+    return data;
   } catch (error) {
-    console.warn(`API call failed for ${url}, using mock data:`, error.message);
+    console.warn(`❌ API call failed for ${url}, using mock data:`, error.message);
+    console.log(`📊 Falling back to mock data for: ${url}`);
+    
     // Return mock data based on the endpoint
     const endpoint = url.split('/').pop();
     switch (endpoint) {
@@ -62,18 +79,76 @@ export async function fetchJSON(url, opts = {}) {
       case 'summary':
         return mockData.payrollSummary;
       default:
+        console.error(`❌ No mock data available for endpoint: ${endpoint}`);
         throw error;
     }
   }
 }
 
 export const DashboardAPI = {
-  getHours: () => fetchJSON('/api/dashboard/hours'),
-  getTeamSplit: () => fetchJSON('/api/dashboard/team-split'),
-  getTeamComposition: () => fetchJSON('/api/dashboard/team-composition'),
-  getRecruitmentPipeline: () => fetchJSON('/api/hiring/pipeline'),
-  getPayouts: () => fetchJSON('/api/payroll/payouts'),
-  getPayrollSummary: () => fetchJSON('/api/payroll/summary'),
+  // Dashboard data endpoints
+  getHours: () => fetchJSON('/dashboard/hours'),
+  getTeamSplit: () => fetchJSON('/dashboard/team-split'),
+  getTeamComposition: () => fetchJSON('/dashboard/team-composition'),
+  getRecruitmentPipeline: () => fetchJSON('/hiring/pipeline'),
+  getPayouts: () => fetchJSON('/payroll/payouts'),
+  getPayrollSummary: () => fetchJSON('/payroll/summary'),
+  
+  // Employee endpoints
+  getEmployees: () => fetchJSON('/employees'),
+  getEmployee: (id) => fetchJSON(`/employees/${id}`),
+  
+  // Task endpoints
+  getTasks: () => fetchJSON('/tasks'),
+  createTask: (taskData) => fetchJSON('/tasks', {
+    method: 'POST',
+    body: JSON.stringify(taskData)
+  }),
+  updateTask: (taskId, updates) => fetchJSON(`/tasks/${taskId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  }),
+  deleteTask: (taskId) => fetchJSON(`/tasks/${taskId}`, {
+    method: 'DELETE'
+  }),
+  
+  // Attendance endpoints
+  getAttendance: () => fetchJSON('/attendance'),
+  createAttendance: (attendanceData) => fetchJSON('/attendance', {
+    method: 'POST',
+    body: JSON.stringify(attendanceData)
+  }),
+  updateAttendance: (attendanceId, updates) => fetchJSON(`/attendance/${attendanceId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  }),
+  
+  // Project endpoints
+  getProjects: () => fetchJSON('/projects'),
+  createProject: (projectData) => fetchJSON('/projects', {
+    method: 'POST',
+    body: JSON.stringify(projectData)
+  }),
+  
+  // Analytics endpoints
+  getAnalytics: () => fetchJSON('/analytics/dashboard'),
+  
+  // Authentication endpoints
+  login: (credentials) => fetchJSON('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(credentials)
+  }),
+  logout: () => fetchJSON('/auth/logout', {
+    method: 'POST'
+  }),
+  
+  // Health check
+  healthCheck: () => fetchJSON('/health'),
+  
+  // Data seeding (development only)
+  seedData: () => fetchJSON('/seed', {
+    method: 'POST'
+  })
 };
 
 

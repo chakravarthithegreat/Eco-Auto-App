@@ -325,8 +325,11 @@ const TaskDashboard = () => {
           
           {/* Task List/Grid View */}
           <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-4" : "space-y-4"}>
-            {tasks.length > 0 ? (
+            {/* FIXED: Add proper null check for tasks array */}
+            {tasks && Array.isArray(tasks) && tasks.length > 0 ? (
               tasks.map((task) => (
+                // FIXED: Add null check for individual task
+                task ? (
                 <Card 
                   key={task.id} 
                   className={`rounded-xl overflow-hidden transition-all hover:shadow-md ${
@@ -336,11 +339,11 @@ const TaskDashboard = () => {
                   <div className={`p-4 ${viewMode === 'grid' ? '' : 'flex-shrink-0 w-64'}`}>
                     <div className="flex justify-between items-start">
                       <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
-                        {task.title}
+                        {task.title || 'Untitled Task'}
                       </h3>
                       <div className="flex gap-2">
-                        <Badge className={getPriorityColor(task.priority)}>
-                          {task.priority}
+                        <Badge className={getPriorityColor(task.priority || 'medium')}>
+                          {task.priority || 'medium'}
                         </Badge>
                         <button className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100">
                           <MoreVertical className="w-4 h-4" />
@@ -348,7 +351,7 @@ const TaskDashboard = () => {
                       </div>
                     </div>
                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {task.description}
+                      {task.description || 'No description available'}
                     </p>
                     
                     <div className="flex flex-wrap gap-2 mt-3">
@@ -356,8 +359,8 @@ const TaskDashboard = () => {
                         <Calendar className="w-4 h-4 mr-1" />
                         {formatDate(task.dueDate)}
                       </div>
-                      <Badge className={getStatusColor(task.status)}>
-                        {task.status}
+                      <Badge className={getStatusColor(task.status || 'pending')}>
+                        {task.status || 'pending'}
                       </Badge>
                     </div>
                     
@@ -365,15 +368,15 @@ const TaskDashboard = () => {
                     <div className="mt-4">
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600">Progress</span>
-                        <span className="font-medium text-gray-900">{task.progress}%</span>
+                        <span className="font-medium text-gray-900">{task.progress || 0}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full ${
-                            task.progress < 30 ? 'bg-red-500' : 
-                            task.progress < 70 ? 'bg-amber-500' : 'bg-green-500'
+                            (task.progress || 0) < 30 ? 'bg-red-500' : 
+                            (task.progress || 0) < 70 ? 'bg-amber-500' : 'bg-green-500'
                           }`} 
-                          style={{ width: `${task.progress}%` }}
+                          style={{ width: `${task.progress || 0}%` }}
                         ></div>
                       </div>
                     </div>
@@ -406,6 +409,7 @@ const TaskDashboard = () => {
                         variant="outline"
                         onClick={() => {
                           // Edit task functionality would go here
+                          console.log('Edit task:', task.id);
                         }}
                         className="hover:shadow-md transition-all"
                       >
@@ -414,6 +418,7 @@ const TaskDashboard = () => {
                     </div>
                   </div>
                 </Card>
+                ) : null
               ))
             ) : (
               <div className="col-span-full text-center py-12">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../state/authStore';
+import { useNavigationStore } from '../../state/navigationStore';
 import { useRoadmapStore } from '../../state/roadmapStore';
 import { useTaskStore } from '../../state/taskStore';
 import { Card, CardContent } from '../ui/Card';
@@ -49,6 +50,7 @@ import RoadmapBoard from '../roadmaps/RoadmapBoard';
 
 const EnhancedManagerDashboard = () => {
   const { user } = useAuthStore();
+  const { setCurrentPage } = useNavigationStore();
   const { roadmaps, getReadyStages, getBlockedStages } = useRoadmapStore();
   const { tasks, getTaskStatistics, updateStage } = useTaskStore();
   const [teamActivities, setTeamActivities] = useState([]);
@@ -327,6 +329,46 @@ const EnhancedManagerDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Quick Actions */}
+      <Card className="rounded-2xl bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-sm border border-light-bg-secondary dark:border-dark-bg-secondary shadow-glass-sm">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-5 h-5 text-light-accent dark:text-dark-accent" />
+            <h3 className="text-lg font-semibold text-light-text dark:text-dark-text">Quick Actions</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button 
+              onClick={() => setCurrentPage('employees')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-primary/10 dark:bg-dark-primary/20 hover:bg-light-primary/20 dark:hover:bg-dark-primary/30 text-light-primary dark:text-dark-primary border border-light-primary/20 dark:border-dark-primary/30"
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-sm font-medium">Team Members</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('tasks')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-success/10 dark:bg-dark-success/20 hover:bg-light-success/20 dark:hover:bg-dark-success/30 text-light-success dark:text-dark-success border border-light-success/20 dark:border-dark-success/30"
+            >
+              <CheckSquare className="w-6 h-6" />
+              <span className="text-sm font-medium">Tasks</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('approvals')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-warning/10 dark:bg-dark-warning/20 hover:bg-light-warning/20 dark:hover:bg-dark-warning/30 text-light-warning dark:text-dark-warning border border-light-warning/20 dark:border-dark-warning/30"
+            >
+              <Clock className="w-6 h-6" />
+              <span className="text-sm font-medium">Approvals</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('projects')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-secondary/10 dark:bg-dark-secondary/20 hover:bg-light-secondary/20 dark:hover:bg-dark-secondary/30 text-light-secondary dark:text-dark-secondary border border-light-secondary/20 dark:border-dark-secondary/30"
+            >
+              <Target className="w-6 h-6" />
+              <span className="text-sm font-medium">Projects</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-4">

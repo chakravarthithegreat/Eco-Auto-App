@@ -1,13 +1,98 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = '/api';
 
 export const usePayrollStore = create(
   persist(
     (set, get) => ({
       // State
-      employees: [],
+      employees: [
+        {
+          id: 1,
+          name: 'Rajesh Kumar',
+          email: 'rajesh.kumar@artgifts.com',
+          role: 'Manager',
+          subRole: 'Production Manager',
+          department: 'Production',
+          baseSalary: 75000,
+          isActive: true,
+          joinDate: '2022-01-15',
+          phone: '+91-9876543210',
+          skills: ['Production Planning', 'Quality Control', 'Team Management'],
+          shift: 'morning'
+        },
+        {
+          id: 2,
+          name: 'Priya Sharma',
+          email: 'priya.sharma@artgifts.com',
+          role: 'Manager',
+          subRole: 'Quality Manager',
+          department: 'Quality Control',
+          baseSalary: 65000,
+          isActive: true,
+          joinDate: '2022-03-20',
+          phone: '+91-9876543212',
+          skills: ['Quality Assurance', 'ISO Standards', 'Inspection'],
+          shift: 'morning'
+        },
+        {
+          id: 3,
+          name: 'Amit Patel',
+          email: 'amit.patel@artgifts.com',
+          role: 'Team Member',
+          subRole: 'Assembly Technician',
+          department: 'Assembly',
+          baseSalary: 45000,
+          isActive: true,
+          joinDate: '2022-06-10',
+          phone: '+91-9876543214',
+          skills: ['Trophy Assembly', 'Equipment Operation', 'Safety Protocols'],
+          shift: 'morning'
+        },
+        {
+          id: 4,
+          name: 'Sneha Reddy',
+          email: 'sneha.reddy@artgifts.com',
+          role: 'Team Member',
+          subRole: 'Packaging Specialist',
+          department: 'Packaging',
+          baseSalary: 40000,
+          isActive: true,
+          joinDate: '2022-08-05',
+          phone: '+91-9876543216',
+          skills: ['Packaging Design', 'Material Handling', 'Inventory Management'],
+          shift: 'afternoon'
+        },
+        {
+          id: 5,
+          name: 'Vikram Singh',
+          email: 'vikram.singh@artgifts.com',
+          role: 'Team Member',
+          subRole: 'Warehouse Operator',
+          department: 'Warehouse',
+          baseSalary: 38000,
+          isActive: true,
+          joinDate: '2022-09-12',
+          phone: '+91-9876543218',
+          skills: ['Inventory Management', 'Forklift Operation', 'Logistics'],
+          shift: 'night'
+        },
+        {
+          id: 6,
+          name: 'Meera Iyer',
+          email: 'meera.iyer@artgifts.com',
+          role: 'Admin',
+          subRole: 'General Manager',
+          department: 'Management',
+          baseSalary: 85000,
+          isActive: true,
+          joinDate: '2021-12-01',
+          phone: '+91-9876543220',
+          skills: ['Strategic Planning', 'Leadership', 'Operations Management'],
+          shift: 'morning'
+        }
+      ],
       payrollData: [],
       currentPayroll: null,
       payrollPolicy: {
@@ -56,8 +141,43 @@ export const usePayrollStore = create(
             throw new Error('Failed to fetch employees');
           }
         } catch (error) {
-          console.error('Error fetching employees:', error);
-          set({ isLoading: false, error: error.message });
+          console.error('Error fetching employees from backend, checking localStorage:', error);
+          
+          // Check localStorage for newly created employees
+          const localStorageEmployees = JSON.parse(localStorage.getItem('employees') || '[]');
+          
+          if (localStorageEmployees.length > 0) {
+            // Transform localStorage employees to match frontend format
+            const transformedEmployees = localStorageEmployees.map(emp => ({
+              id: emp._id || emp.id,
+              name: emp.name,
+              email: emp.email,
+              role: emp.role || 'team_member',
+              subRole: emp.position,
+              department: emp.department,
+              baseSalary: emp.salary,
+              isActive: emp.status === 'active',
+              joinDate: emp.hireDate,
+              phone: emp.phoneNumber,
+              skills: emp.skills || [],
+              shift: emp.shift || 'morning'
+            }));
+            
+            // Merge with existing demo employees
+            const existingEmployees = get().employees;
+            const allEmployees = [...existingEmployees, ...transformedEmployees];
+            
+            set({ employees: allEmployees, isLoading: false });
+          } else {
+            // Use existing demo data if no localStorage employees
+            const currentEmployees = get().employees;
+            if (currentEmployees.length === 0) {
+              // If no demo data exists, use the default demo data
+              set({ isLoading: false, error: null });
+            } else {
+              set({ isLoading: false, error: null });
+            }
+          }
         }
       },
 

@@ -38,12 +38,14 @@ const AttendancePage = () => {
     clockOut,
     fetchAttendanceRecords,
     getCurrentSessionTime,
-    getAttendanceSummary
+    getAttendanceSummary,
+    getTodaySessions
   } = attendanceStore;
   
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sessionTime, setSessionTime] = useState(null);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
+  const [todaySessions, setTodaySessions] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [activeTab, setActiveTab] = useState('daily');
 
@@ -51,32 +53,59 @@ const AttendancePage = () => {
   useEffect(() => {
     console.log('AttendancePage: Initializing attendance data');
     
+    // Initialize the store
+    attendanceStore.initializeStore();
+    
     // Ensure attendance records are fetched
     fetchAttendanceRecords();
     console.log('AttendancePage: Fetching attendance records');
-    
-    // Initialize mock data if needed
-    if (!attendanceStore.attendanceRecords || attendanceStore.attendanceRecords.length === 0) {
-      console.log('AttendancePage: Initializing mock attendance data');
-      // The store will handle mock data initialization
-    }
-  }, [fetchAttendanceRecords, attendanceStore.attendanceRecords]);
+  }, []);
 
   useEffect(() => {
+    console.log('AttendancePage: Session timer effect - isCheckedIn:', isCheckedIn, 'currentSession:', currentSession);
+    
+    let sessionTimer = null;
+    
     if (isCheckedIn && currentSession) {
-      const sessionTimer = setInterval(() => {
-        const sessionTime = getCurrentSessionTime();
-        setSessionTime(sessionTime);
+      console.log('AttendancePage: Starting session timer');
+      sessionTimer = setInterval(() => {
+        try {
+          const sessionTime = getCurrentSessionTime();
+          console.log('AttendancePage: Session time update:', sessionTime);
+          setSessionTime(sessionTime);
+        } catch (error) {
+          console.error('AttendancePage: Error updating session time:', error);
+          // Stop timer on error
+          if (sessionTimer) {
+            clearInterval(sessionTimer);
+            sessionTimer = null;
+          }
+        }
       }, 1000);
-      
-      return () => clearInterval(sessionTimer);
+    } else {
+      console.log('AttendancePage: Not starting session timer - isCheckedIn:', isCheckedIn, 'currentSession:', currentSession);
+      setSessionTime(null);
     }
+    
+    // FIXED: Proper cleanup function to prevent memory leaks
+    return () => {
+      console.log('AttendancePage: Cleaning up session timer');
+      if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+      }
+    };
   }, [isCheckedIn, currentSession, getCurrentSessionTime]);
 
   useEffect(() => {
     const summary = getAttendanceSummary();
     setAttendanceSummary(summary);
   }, [getAttendanceSummary]);
+
+  useEffect(() => {
+    const sessions = getTodaySessions();
+    setTodaySessions(sessions);
+  }, [getTodaySessions]);
 
   // Update current time every second
   useEffect(() => {
@@ -88,16 +117,46 @@ const AttendancePage = () => {
   }, []);
 
   const handleClockIn = async () => {
-    const result = await clockIn();
-    if (result.success) {
-      console.log('Clocked in successfully');
+    try {
+      const result = await clockIn();
+      if (result.success) {
+        console.log('Clocked in successfully');
+        // Clear any previous errors
+        attendanceStore.clearError();
+        // Show success notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Clock In Successful', {
+            body: `You have been clocked in at ${new Date().toLocaleTimeString()}`,
+            icon: '/favicon.ico'
+          });
+        }
+      } else {
+        console.error('Clock in failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Clock in error:', error);
     }
   };
 
   const handleClockOut = async () => {
-    const result = await clockOut();
-    if (result.success) {
-      console.log('Clocked out successfully');
+    try {
+      const result = await clockOut();
+      if (result.success) {
+        console.log('Clocked out successfully');
+        // Clear any previous errors
+        attendanceStore.clearError();
+        // Show success notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Clock Out Successful', {
+            body: `You have been clocked out at ${new Date().toLocaleTimeString()}`,
+            icon: '/favicon.ico'
+          });
+        }
+      } else {
+        console.error('Clock out failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Clock out error:', error);
     }
   };
 
@@ -109,6 +168,17 @@ const AttendancePage = () => {
       case ATTENDANCE_STATUS.halfDay: return 'bg-orange-100 text-orange-800';
       case ATTENDANCE_STATUS.leave: return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatStatus = (status) => {
+    switch (status) {
+      case ATTENDANCE_STATUS.present: return 'Present';
+      case ATTENDANCE_STATUS.late: return 'Late';
+      case ATTENDANCE_STATUS.absent: return 'Absent';
+      case ATTENDANCE_STATUS.halfDay: return 'Half Day';
+      case ATTENDANCE_STATUS.leave: return 'On Leave';
+      default: return status;
     }
   };
 
@@ -284,8 +354,24 @@ const AttendancePage = () => {
             </CardHeader>
             <CardContent>
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm animate-pulse">
-                  {error}
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <div className="text-red-700 font-medium">Attendance Error</div>
+                  </div>
+                  <div className="text-red-600 text-sm mt-1">{error}</div>
+                  <div className="text-red-500 text-xs mt-2">
+                    Please try refreshing the page or contact support if the issue persists.
+                  </div>
+                </div>
+              )}
+              
+              {isLoading && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                    <div className="text-blue-700 font-medium">Loading attendance data...</div>
+                  </div>
                 </div>
               )}
               
@@ -322,8 +408,17 @@ const AttendancePage = () => {
                           className="w-full flex items-center justify-center gap-2 py-3 text-lg bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
                           disabled={isLoading}
                         >
-                          <Square className="w-5 h-5" />
-                          Clock Out
+                          {isLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Square className="w-5 h-5" />
+                              Clock Out
+                            </>
+                          )}
                         </Button>
                       </div>
                     ) : (
@@ -333,8 +428,17 @@ const AttendancePage = () => {
                           className="w-full flex items-center justify-center gap-2 py-3 text-lg bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                           disabled={isLoading}
                         >
-                          <Play className="w-5 h-5" />
-                          Clock In
+                          {isLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-5 h-5" />
+                              Clock In
+                            </>
+                          )}
                         </Button>
                         
                         <div className="text-center">
@@ -375,9 +479,7 @@ const AttendancePage = () => {
                           </div>
                         </div>
                         <Badge className={`${getStatusColor(todayAttendance?.status || ATTENDANCE_STATUS.absent)} px-3 py-1 text-sm`}>
-                          {todayAttendance?.status ? 
-                            todayAttendance.status.charAt(0).toUpperCase() + todayAttendance.status.slice(1) : 
-                            'Absent'}
+                          {formatStatus(todayAttendance?.status || ATTENDANCE_STATUS.absent)}
                         </Badge>
                       </div>
                       
@@ -392,7 +494,7 @@ const AttendancePage = () => {
                           </div>
                         </div>
                         <div className="font-bold text-surface-900 text-lg">
-                          {todayAttendance?.totalHours ? `${todayAttendance.totalHours}h` : '--'}
+                          {todaySessions?.totalHours ? `${todaySessions.totalHours}h` : '--'}
                         </div>
                       </div>
                       
@@ -408,6 +510,21 @@ const AttendancePage = () => {
                         </div>
                         <div className="font-bold text-surface-900 text-lg">
                           {attendancePolicy?.dailyHours || 8}h
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-surface-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 bg-info-100 rounded-xl">
+                            <Clock className="w-5 h-5 text-info-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-surface-900">Sessions</div>
+                            <div className="text-sm text-surface-600">Today's sessions</div>
+                          </div>
+                        </div>
+                        <div className="font-bold text-surface-900 text-lg">
+                          {todaySessions?.totalSessions || 0}
                         </div>
                       </div>
                     </div>
@@ -454,10 +571,10 @@ const AttendancePage = () => {
                           <td className="py-3 px-4 text-sm">{record.date}</td>
                           <td className="py-3 px-4 text-sm">{formatTime(record.checkInTime)}</td>
                           <td className="py-3 px-4 text-sm">{formatTime(record.checkOutTime)}</td>
-                          <td className="py-3 px-4 text-sm">{record.totalHours ? `${record.totalHours}h` : '--'}</td>
+                          <td className="py-3 px-4 text-sm">{record.hoursWorked ? `${record.hoursWorked}h` : '--'}</td>
                           <td className="py-3 px-4">
                             <Badge className={`${getStatusColor(record.status)} px-2 py-1 text-xs`}>
-                              {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                              {formatStatus(record.status)}
                             </Badge>
                           </td>
                         </tr>

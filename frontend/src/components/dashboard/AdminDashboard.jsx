@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../state/authStore';
+import { useNavigationStore } from '../../state/navigationStore';
 import { useRoadmapStore } from '../../state/roadmapStore';
 import { useTaskStore } from '../../state/taskStore';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
@@ -24,7 +25,8 @@ import {
   Bell,
   Globe,
   Lock,
-  Shield
+  Shield,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import StatsCard from '../ui/StatsCard';
@@ -43,6 +45,7 @@ import RoadmapBoardGame from '../roadmaps/RoadmapBoardGame';
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
+  const { setCurrentPage } = useNavigationStore();
   const { 
     roadmaps, 
     getRoadmapMetrics, 
@@ -207,7 +210,7 @@ const AdminDashboard = () => {
       </div>
 
             {/* Enhanced KPI Cards with psychology-based insights - TOP OF DASHBOARD */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {kpiData.map((kpi, index) => (
           <div key={index} className="relative group">
             <StatsCard 
@@ -228,6 +231,48 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Quick Actions */}
+      <Card className="rounded-2xl bg-light-surface/80 dark:bg-dark-surface/80 backdrop-blur-sm border border-light-bg-secondary dark:border-dark-bg-secondary shadow-glass-sm mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-light-accent dark:text-dark-accent" />
+            Quick Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button 
+              onClick={() => setCurrentPage('employees')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-primary/10 dark:bg-dark-primary/20 hover:bg-light-primary/20 dark:hover:bg-dark-primary/30 text-light-primary dark:text-dark-primary border border-light-primary/20 dark:border-dark-primary/30"
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-sm font-medium">Manage Employees</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('payroll')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-success/10 dark:bg-dark-success/20 hover:bg-light-success/20 dark:hover:bg-dark-success/30 text-light-success dark:text-dark-success border border-light-success/20 dark:border-dark-success/30"
+            >
+              <Briefcase className="w-6 h-6" />
+              <span className="text-sm font-medium">Payroll</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('projects')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-warning/10 dark:bg-dark-warning/20 hover:bg-light-warning/20 dark:hover:bg-dark-warning/30 text-light-warning dark:text-dark-warning border border-light-warning/20 dark:border-dark-warning/30"
+            >
+              <Target className="w-6 h-6" />
+              <span className="text-sm font-medium">Projects</span>
+            </Button>
+            <Button 
+              onClick={() => setCurrentPage('admin-settings')}
+              className="flex flex-col items-center gap-2 p-4 h-auto bg-light-secondary/10 dark:bg-dark-secondary/20 hover:bg-light-secondary/20 dark:hover:bg-dark-secondary/30 text-light-secondary dark:text-dark-secondary border border-light-secondary/20 dark:border-dark-secondary/30"
+            >
+              <Settings className="w-6 h-6" />
+              <span className="text-sm font-medium">Settings</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main layout: Left column (Profile + Work Time) | Right column (8 Hours + Team + Team Split) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

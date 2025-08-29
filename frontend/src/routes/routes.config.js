@@ -110,11 +110,17 @@ const routes = [
     element: "PayrollOverview",
     action: "nav.payroll"
   },
-  { 
-    path: "/leaves", 
-    name: "Leave Management", 
+  {
+    path: "/leaves",
+    name: "Leave Management",
     element: "LeaveManagement",
     action: "nav.leaves"
+  },
+  {
+    path: "/attendance",
+    name: "Attendance",
+    element: "AttendancePage",
+    action: "nav.attendance"
   },
   { 
     path: "/admin-settings", 
@@ -133,6 +139,42 @@ const routes = [
     name: "Help Center", 
     element: "HelpPage",
     action: "nav.help"
+  },
+  { 
+    path: "/mobile-overflow-test", 
+    name: "Mobile Overflow Test", 
+    element: "MobileOverflowTest",
+    action: "nav.test"
+  },
+  { 
+    path: "/employee-signup", 
+    name: "Employee Sign-Up", 
+    element: "EmployeeSignUp",
+    action: "nav.employees"
+  },
+  { 
+    path: "/terms-and-conditions", 
+    name: "Terms and Conditions", 
+    element: "TermsAndConditions",
+    action: "nav.employees"
+  },
+  { 
+    path: "/profile-creation", 
+    name: "Profile Creation", 
+    element: "ProfileCreation",
+    action: "nav.employees"
+  },
+  { 
+    path: "/employee-approvals", 
+    name: "Employee Approvals", 
+    element: "EmployeeApprovalDashboard",
+    action: "nav.employees"
+  },
+  { 
+    path: "/employee-login", 
+    name: "Employee Login", 
+    element: "EmployeeLogin",
+    action: "nav.auth"
   }
 ];
 

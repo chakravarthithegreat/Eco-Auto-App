@@ -14,8 +14,10 @@ import {
   EyeOff,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Volume2
 } from 'lucide-react';
+import { Button } from '../ui/Button';
 import { triggerHaptic } from '../../utils/hapticUtils';
 
 const AdminSettings = () => {
@@ -30,7 +32,11 @@ const AdminSettings = () => {
       email: true,
       push: true,
       sms: false,
-      dailyDigest: true
+      dailyDigest: true,
+      soundEnabled: true,
+      soundVolume: 70,
+      soundType: 'chime',
+      customSound: null
     },
     display: {
       theme: 'auto',
@@ -173,35 +179,150 @@ const AdminSettings = () => {
   );
 
   const renderNotificationsSettings = () => (
-    <div className="bg-light-surface dark:bg-dark-surface rounded-xl p-6 shadow-glass-sm">
-      <h3 className="text-lg font-semibold text-light-text dark:text-dark-text mb-4 flex items-center gap-2">
-        <Bell className="w-5 h-5 text-light-primary dark:text-dark-primary" />
-        Notification Preferences
-      </h3>
-      <div className="space-y-4">
-        {Object.entries(settings.notifications).map(([key, value]) => (
-          <div key={key} className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="bg-light-surface dark:bg-dark-surface rounded-xl p-6 shadow-glass-sm">
+        <h3 className="text-lg font-semibold text-light-text dark:text-dark-text mb-4 flex items-center gap-2">
+          <Bell className="w-5 h-5 text-light-primary dark:text-dark-primary" />
+          Notification Preferences
+        </h3>
+        <div className="space-y-4">
+          {Object.entries(settings.notifications).map(([key, value]) => {
+            // Skip sound settings as they will be handled separately
+            if (key.startsWith('sound')) return null;
+            
+            return (
+              <div key={key} className="flex items-center justify-between">
                 <div>
-              <p className="font-medium text-light-text dark:text-dark-text capitalize">
-                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-              </p>
-              <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
-                Receive {key.replace(/([A-Z])/g, ' $1').toLowerCase()} notifications
-              </p>
+                  <p className="font-medium text-light-text dark:text-dark-text capitalize">
+                    {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                  </p>
+                  <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                    Receive {key.replace(/([A-Z])/g, ' $1').toLowerCase()} notifications
+                  </p>
                 </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+                <label className="relative inline-flex items-center cursor-pointer">
                   <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={value}
+                    onChange={(e) => handleSettingChange('notifications', key, e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-light-bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-light-primary/20 rounded-full peer dark:bg-dark-bg-secondary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:peer-checked:bg-light-primary"></div>
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sound Settings */}
+      <div className="bg-light-surface dark:bg-dark-surface rounded-xl p-6 shadow-glass-sm">
+        <h3 className="text-lg font-semibold text-light-text dark:text-dark-text mb-4 flex items-center gap-2">
+          <Volume2 className="w-5 h-5 text-light-primary dark:text-dark-primary" />
+          Notification Sounds
+        </h3>
+        <div className="space-y-4">
+          {/* Sound Enabled */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-light-text dark:text-dark-text">Enable Sounds</p>
+              <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">Play sounds for notifications</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
                 type="checkbox"
                 className="sr-only peer"
-                checked={value}
-                onChange={(e) => handleSettingChange('notifications', key, e.target.checked)}
+                checked={settings.notifications.soundEnabled}
+                onChange={(e) => handleSettingChange('notifications', 'soundEnabled', e.target.checked)}
               />
               <div className="w-11 h-6 bg-light-bg-secondary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-light-primary/20 rounded-full peer dark:bg-dark-bg-secondary peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all dark:peer-checked:bg-light-primary"></div>
-                  </label>
-                </div>
-        ))}
-                </div>
-              </div>
+            </label>
+          </div>
+
+          {/* Sound Volume */}
+          <div>
+            <div className="flex justify-between mb-2">
+              <p className="font-medium text-light-text dark:text-dark-text">Volume</p>
+              <span className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                {settings.notifications.soundVolume}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={settings.notifications.soundVolume}
+              onChange={(e) => handleSettingChange('notifications', 'soundVolume', parseInt(e.target.value))}
+              className="w-full h-2 bg-light-bg-secondary dark:bg-dark-bg-secondary rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+
+          {/* Sound Type */}
+          <div>
+            <p className="font-medium text-light-text dark:text-dark-text mb-2">Sound Type</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { id: 'chime', name: 'Chime' },
+                { id: 'bell', name: 'Bell' },
+                { id: 'ping', name: 'Ping' },
+                { id: 'alert', name: 'Alert' },
+                { id: 'success', name: 'Success' },
+                { id: 'notification', name: 'Notification' }
+              ].map((sound) => (
+                <button
+                  key={sound.id}
+                  onClick={() => handleSettingChange('notifications', 'soundType', sound.id)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    settings.notifications.soundType === sound.id
+                      ? 'bg-light-primary text-white dark:bg-dark-primary'
+                      : 'bg-light-bg-secondary text-light-text hover:bg-light-bg-secondary/80 dark:bg-dark-bg-secondary dark:text-dark-text dark:hover:bg-dark-bg-secondary/80'
+                  }`}
+                >
+                  {sound.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Sound Upload */}
+          <div>
+            <p className="font-medium text-light-text dark:text-dark-text mb-2">Custom Sound</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const url = URL.createObjectURL(file);
+                    handleSettingChange('notifications', 'customSound', url);
+                  }
+                }}
+                className="flex-1 px-3 py-2 bg-light-bg-secondary dark:bg-dark-bg-secondary border border-light-bg-secondary dark:border-dark-bg-secondary rounded-lg text-light-text dark:text-dark-text text-sm"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Play test sound
+                  const { playNotificationSound } = require('../../utils/notificationSoundUtils');
+                  if (settings.notifications.customSound) {
+                    playNotificationSound(null, settings.notifications.customSound);
+                  } else {
+                    playNotificationSound(settings.notifications.soundType);
+                  }
+                }}
+              >
+                Test
+              </Button>
+            </div>
+            <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary mt-1">
+              Upload your own notification sound (MP3, WAV, OGG)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 
   const renderDisplaySettings = () => (
